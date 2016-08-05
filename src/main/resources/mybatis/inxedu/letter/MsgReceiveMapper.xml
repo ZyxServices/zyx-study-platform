@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MsgReceiveMapper">
+
+	<resultMap id="MsgReceiveResult" type="MsgReceive">
+		<result property="id" column="ID" />
+		<result property="cusId" column="CUS_ID" />
+		<result property="addTime" column="ADD_TIME" />
+		<result property="updateTime" column="UPDATE_TIME" />
+		<result property="content" column="CONTENT" />
+		<result property="type" column="TYPE" />
+		<result property="status" column="STATUS" />
+		<result property="receivingCusId" column="RECEIVING_CUSID" />
+		<result property="groupId" column="GROUP_ID" />
+		<result property="showname" column="SHOWNAME " />
+	</resultMap>
+
+	<resultMap id="QueryMsgReceiveResult" type="QueryMsgReceive"
+		extends="MsgReceiveResult">
+		<result property="remarks" column="remarks" />
+		<result property="groupName" column="groupName" />
+		<result property="systemNum" column="systemNum" />
+		<result property="letterNum" column="letterNum" />
+		<result property="friNum" column="friNum" />
+		<result property="groupNum" column="groupNum" />
+	</resultMap>
+
+	<sql id="edu_msg_receive_columns">
+		EDU_MSG_RECEIVE.ID,
+		EDU_MSG_RECEIVE.CUS_ID,
+		EDU_MSG_RECEIVE.ADD_TIME,
+		EDU_MSG_RECEIVE.UPDATE_TIME,
+		EDU_MSG_RECEIVE.CONTENT,
+		EDU_MSG_RECEIVE.TYPE,
+		EDU_MSG_RECEIVE.STATUS,
+		EDU_MSG_RECEIVE.RECEIVING_CUSID,
+		EDU_MSG_RECEIVE.GROUP_ID,
+		EDU_MSG_RECEIVE.SHOWNAME
+	</sql>
+
+	<sql id="edu_msg_receive_properties">
+		#{id},
+		#{cusId},
+		#{addTime},
+		#{updateTime},
+		#{content},
+		#{type},
+		#{status},
+		#{receivingCusId},
+		#{groupId},
+		#{showname}
+	</sql>
+
+	<insert id="addMsgReceive" parameterType="java.util.HashMap"
+		useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+		INSERT INTO EDU_MSG_RECEIVE (
+		<include refid="edu_msg_receive_columns" />
+		) VALUES (
+		<include refid="edu_msg_receive_properties" />
+		)
+	</insert>
+
+	<delete id="delFriend" parameterType="java.util.HashMap">
+		DELETE FROM EDU_MSG_RECEIVE
+		WHERE
+		cus_id = #{cusId} and cus_friend_id = #{cusFriendId}
+	</delete>
+	<!-- 删除收件箱 -->
+	<delete id="delMsgReceiveInbox" parameterType="java.util.HashMap">
+		DELETE FROM
+		EDU_MSG_RECEIVE WHERE id = #{id} and
+		receiving_cusId =
+		#{receivingCusId}
+	</delete>
+
+	<select id="queryMsgReceiveByInbox" parameterType="java.util.HashMap"
+		resultMap="QueryMsgReceiveResult">
+		select
+		<include refid="edu_msg_receive_columns" />
+		,
+		EDU_USER.SHOW_NAME  showname
+		from EDU_MSG_RECEIVE
+		left join
+		EDU_USER
+		on EDU_MSG_RECEIVE.cus_id = EDU_USER.USER_ID
+		<where>
+			EDU_MSG_RECEIVE.receiving_cusId =
+			#{e.receivingCusId}
+		</where>
+		order By EDU_MSG_RECEIVE.id desc
+		<include refid="publicMapper.pageEnd" />
+	</select>
+
+	<select id="queryMsgReceiveByInboxCount" parameterType="java.util.HashMap"
+		resultType="int">
+		select count(1)
+		from EDU_MSG_RECEIVE
+		<where>
+			EDU_MSG_RECEIVE.receiving_cusId =
+			#{e.receivingCusId}
+		</where>
+	</select>
+
+	<update id="updateAllReadMsgReceiveInbox" parameterType="java.util.HashMap">
+		UPDATE
+		EDU_MSG_RECEIVE SET status = 1 WHERE
+		receiving_cusId =
+		#{receivingCusId} and status = 0
+	</update>
+
+	<update id="updateAllMsgReceiveReadByType" parameterType="java.util.HashMap">
+		UPDATE
+		EDU_MSG_RECEIVE SET status = 1
+		WHERE type = #{type} and receiving_cusId
+		= #{receivingCusId}
+		and status = 0
+	</update>
+
+	<select id="queryGroupMessageCount" parameterType="java.util.HashMap"
+		resultType="int">
+		select count(1)
+		from EDU_MSG_RECEIVE
+		<where>
+			EDU_MSG_RECEIVE.type = 4
+			and EDU_MSG_RECEIVE.receiving_cusId =
+			#{e.receivingCusId}
+		</where>
+	</select>
+
+	<insert id="addMsgReceiveBatch" parameterType="java.util.HashMap">
+		INSERT INTO EDU_MSG_RECEIVE (
+		<include refid="edu_msg_receive_columns" />
+		) VALUES
+		<foreach collection="list" index="index" item="letterList"
+			separator=",">
+			(#{letterList.id},
+			#{letterList.cusId},
+			#{letterList.addTime},
+			#{letterList.updateTime},
+			#{letterList.content},
+			#{letterList.type},
+			#{letterList.status},
+			#{letterList.receivingCusId},
+			#{letterList.groupId},
+			#{letterList.showname}
+			)
+		</foreach>
+	</insert>
+
+	<!-- 更新站内信的状态 删除收件箱 -->
+	<update id="updateLetterStatusInbox" parameterType="java.util.HashMap">
+		UPDATE
+		EDU_MSG_RECEIVE SET status = #{status} WHERE id=#{id} and
+		EDU_MSG_RECEIVE.receiving_cusId = #{receivingCusId}
+	</update>
+	<!-- 更新站内信的状态 删除发件箱 -->
+	<update id="updateLetterStatusOutbox" parameterType="java.util.HashMap">
+		UPDATE
+		EDU_MSG_RECEIVE SET status = #{status} WHERE id=#{id} and
+		EDU_MSG_RECEIVE.cus_id = #{cusId}
+	</update>
+
+	<delete id="delMsgReceivePast" parameterType="java.util.HashMap">
+		DELETE FROM
+		EDU_MSG_RECEIVE WHERE 
+		<![CDATA[EDU_MSG_RECEIVE.add_time<#{date}]]>
+	</delete>
+</mapper>

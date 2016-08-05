@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="HelpMenuMapper">
+        
+        <resultMap id="HelpMenuResult" type="HelpMenu">
+            <result property="id" column="id"/>
+            <result property="parentId" column="parentId"/>
+            <result property="name" column="name"/>
+            <result property="createTime" column="create_time"/>
+            <result property="sort" column="sort"/>
+            <result property="linkBuilding" column="link_building"/>
+        </resultMap>
+        <resultMap id="HelpMenuContentResult" type="HelpMenu">
+            <result property="id" column="id"/>
+            <result property="parentId" column="parentId"/>
+            <result property="name" column="name"/>
+            <result property="createTime" column="create_time"/>
+            <result property="content" column="content"/>
+            <result property="sort" column="sort"/>
+            <result property="linkBuilding" column="link_building"/>
+        </resultMap>
+        <sql id="edu_help_menu_columns">
+            EDU_HELP_MENU.id,
+            EDU_HELP_MENU.parentId,
+            EDU_HELP_MENU.name,
+            EDU_HELP_MENU.create_time,
+            EDU_HELP_MENU.sort,
+            EDU_HELP_MENU.link_building
+        </sql>
+        <sql id="edu_help_menu_content_columns">
+            EDU_HELP_MENU.id,
+            EDU_HELP_MENU.parentId,
+            EDU_HELP_MENU.name,
+            EDU_HELP_MENU.create_time,
+            EDU_HELP_MENU.content,
+            EDU_HELP_MENU.sort,
+            EDU_HELP_MENU.link_building
+        </sql>
+
+        <sql id="edu_help_menu_properties">
+            #{id},
+            #{parentId},
+            #{name},
+            #{createTime},
+            #{content},
+            #{sort},
+            #{linkBuilding}
+        </sql>
+     
+        <!-- 查询所有一级菜单-->
+        <select id="getHelpMenuOneAll" resultMap="HelpMenuResult">
+        	select * from EDU_HELP_MENU where parentId=0  ORDER BY sort DESC
+        </select>
+		<!-- 根据一级分类ID查询二级菜单-->
+        <select id="getHelpMenuTwoByOneId" resultMap="HelpMenuResult" parameterType="Long">
+            SELECT * FROM EDU_HELP_MENU where parentId=#{value} ORDER BY sort DESC
+        </select>
+
+        <!-- 删除菜单-->
+        <delete id="delHelpMenuById" parameterType="Long">
+        	delete from EDU_HELP_MENU where id=#{value}
+        </delete>
+        <!-- 更新菜单-->
+        <update id="updateHelpMenuById" parameterType="HelpMenu">
+        	update EDU_HELP_MENU set
+        	parentId=#{parentId},
+        	name=#{name},
+        	content=#{content},
+        	sort=#{sort},
+        	link_building = #{linkBuilding}
+        	where id=#{id}
+        </update>
+        <!-- 添加菜单-->
+        <insert id="createHelpMenu" parameterType="HelpMenu" keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+        	insert into EDU_HELP_MENU(<include refid="HelpMenuMapper.edu_help_menu_content_columns"/>) values(<include refid="HelpMenuMapper.edu_help_menu_properties"/>)
+       	</insert>
+        <!-- 根据ID查询菜单-->
+        <select id="getHelpMenuById" parameterType="Long" resultMap="HelpMenuContentResult">
+        	select <include refid="HelpMenuMapper.edu_help_menu_content_columns"/> from EDU_HELP_MENU where id=#{value}
+        </select>
+        <!--end-->
+</mapper>
